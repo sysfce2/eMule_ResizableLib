@@ -41,8 +41,11 @@ BEGIN_MESSAGE_MAP(CDemoDlg, CResizableDialog)
 	ON_BN_CLICKED(IDC_RADIO3, OnRadio3)
 	ON_BN_CLICKED(IDC_RADIO4, OnRadio4)
 	ON_BN_CLICKED(IDC_RADIO5, OnRadio5)
-	ON_WM_CREATE()
+	ON_WM_CLOSE()
+	ON_COMMAND(IDCANCEL, &CDemoDlg::OnCancel)
+	ON_COMMAND(IDOK, &CDemoDlg::OnOk)
 	//}}AFX_MSG_MAP
+	ON_WM_NCDESTROY()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -211,6 +214,7 @@ void CDemoDlg::SetThemeProperties(DWORD dwFlags)
 	EnumChildWindows(m_hWnd, SendThemeChangedProc, 0);
 	InvalidateRect(NULL);
 	UpdateWindow();
+	UpdateMaxSize();
 }
 
 void CDemoDlg::OnRadio3()
@@ -228,14 +232,31 @@ void CDemoDlg::OnRadio5()
 	SetThemeProperties(0);
 }
 
-#define WS_EX_LAYOUT_RTL	0x00400000
-
-int CDemoDlg::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+afx_msg void CDemoDlg::OnClose()
 {
-//	ModifyStyleEx(0, WS_EX_LAYOUT_RTL);
+	DestroyWindow();
+}
 
-	if (CResizableDialog::OnCreate(lpCreateStruct) == -1)
-		return -1;
+void CDemoDlg::OnCancel()
+{
+	DestroyWindow();
+}
+
+void CDemoDlg::OnOk()
+{
+	DestroyWindow();
+}
+
+void CDemoDlg::OnNcDestroy()
+{
+	// we are the main window if we were created modeless
+	// in that case we need to free memory allocated by new
+	// but main window is cleared inside default message handler
+	// so we catch it here and delete later
+	BOOL needsDelete = (AfxGetMainWnd() == this);
+
+	CResizableDialog::OnNcDestroy();
 	
-	return 0;
+	if (needsDelete)
+		delete this;
 }
